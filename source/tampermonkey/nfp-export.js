@@ -345,9 +345,7 @@
        function getItems(dataCleaned)
        {
          const items = []
-         const summary = dataCleaned.find('#painelItens table').last()
-
-         dataCleaned.find('#painelItens table').clone().not(':last').each( function () {
+         dataCleaned.find('#painelItens table').not(':last').each( function () {
            const row  = $(this).find('tbody tr td')
            const item = {
               code        : $(row[1]).text(),
@@ -373,6 +371,28 @@
          })
 
          return items
+       }
+
+       function getSummary(dataCleaned)
+       {
+         const getTotalsValue = (value => {
+           const matches = /^\s*R\$\s+(\d+,\d{2})/g.exec(value)
+           if ( (matches) && (matches.length > 0) )
+           {
+             return parseFloat(matches[1].replace(',', '.'))
+           }
+
+           return 0
+         })
+
+         const summary = dataCleaned.find('#painelItens table').last()
+         const rows = summary.find('tbody tr td:odd')
+
+         return { totals : {
+             discount : getTotalsValue($(rows[0]).text()),
+             addition : getTotalsValue($(rows[1]).text()),
+             total    : getTotalsValue($(rows[2]).text())
+         }}
        }
 
        try
@@ -404,6 +424,8 @@
               ...getCOO     (dataCleaned),
               ...getCustomer(dataCleaned),
               items  : getItems(dataCleaned),
+              ...getSummary(dataCleaned),
+
               source : dataCleaned.html()
           }
 
