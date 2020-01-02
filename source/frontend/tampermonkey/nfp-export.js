@@ -217,35 +217,56 @@
          .text('Alternar visualização')
          .attr('href', '#')
          .click( () => {
-             const coupon = $('div.CupomFiscal')
-             const newVisualization = coupon.filter('[style]').length == 1
-             if (!newVisualization)
-             {
-                coupon
-                    .attr('style','font-size:13px; width:430px; padding:15px;')
-                    .css ({ 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)', 'margin-left' : 'auto', 'margin-right': 'auto' })
-                //coupon.addClass('alinharCentro')
-                $('#ConteudoPrincipal div:has(input + input)')
-                    .children()
-                    .addClass   ('btn btn-sm btn-info')
-                    .removeClass('button')
-                    .css        ({ 'font-size' : '1rem', 'margin' : '4px', 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)' })
-                    .width      (74)
-             }
-             else
-             {
-                coupon
-                    .removeAttr('style')
-                    .css ({ 'box-shadow' : '', 'margin-left' : '', 'margin-right' : '' })
-                //coupon.removeClass('alinharCentro')
-                $('#ConteudoPrincipal div:has(input + input)')
-                    .children()
-                    .removeClass('btn btn-sm btn-info')
-                    .addClass   ('button')
-                    .css        ({ 'font-size' : '', 'margin' : '', 'box-shadow' : '' })
-                    .width      (38)
-             }
+             const customView = localStorage.getItem('custom-view')
+             localStorage.setItem('custom-view', customView == 'customized' ? 'standard' : 'customized')
+             setupView()
          })
+  }
+
+
+  async function setupView()
+  {
+    function setupCustomizedView()
+    {
+        const coupon = $('div.CupomFiscal')
+        coupon
+          .attr('style','font-size:13px; width:430px; padding:15px;')
+          .css ({ 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)', 'margin-left' : 'auto', 'margin-right': 'auto' })
+
+        $('#ConteudoPrincipal div:has(input + input)')
+          .children()
+          .addClass   ('btn btn-sm btn-info')
+          .removeClass('button')
+          .css        ({ 'font-size' : '1rem', 'margin' : '4px', 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)' })
+          .width      (74)
+    }
+
+    function setupStandardView()
+    {
+        const coupon = $('div.CupomFiscal')
+        coupon
+          .removeAttr('style')
+          .css ({ 'box-shadow' : '', 'margin-left' : '', 'margin-right' : '' })
+          //coupon.removeClass('alinharCentro')
+        $('#ConteudoPrincipal div:has(input + input)')
+          .children()
+          .removeClass('btn btn-sm btn-info')
+          .addClass   ('button')
+          .css        ({ 'font-size' : '', 'margin' : '', 'box-shadow' : '' })
+          .width      (38)
+    }
+
+    const view = ($('div.CupomFiscal').length > 0) ? localStorage.getItem('custom-view') : 'standard'
+    switch (view)
+    {
+        case 'customized':
+            setupCustomizedView()
+            break;
+
+        default:
+            setupStandardView()
+            break;
+    }
   }
 
 
@@ -473,6 +494,7 @@
       await installBootstrap()
       await setupButton()
       await setupViewToggler()
+      await setupView()
       await setupServiceDialog()
     }
     catch (e)
