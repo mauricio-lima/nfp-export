@@ -162,11 +162,26 @@
          throw new Exception('Invalid array supplied');
       }
       
+      $sql = 'SELECT input_id, processed, content FROM input where input_id in (' .  str_repeat('?,', count($list) - 1) . '?' . ')';
+      $database = GetDatabaseConnection();
+      $statment = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+      $statment->execute($list);
+      
       $result = [];
-      foreach($list as $id)
+      while ($row = $statment->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)) 
       {
-        array_push($result, array( 'id' => $id, 'store_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ) ) ); 
+        $item = array( 'id' => intval($row['input_id']));
+        if ($row['processed'] != null)
+        {
+          $item['previously_processed'] = $row['processed'];
+          array_push($result, $item);
+          continue;
+        }
+        
+        $item = array_merge($item,  array('store_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ), 'start' => 0, 'interval' => 0));
+        array_push($result, $item);
       }
+      
       print(json_encode($result, JSON_PRETTY_PRINT));
     }
     catch (Exception $e)
