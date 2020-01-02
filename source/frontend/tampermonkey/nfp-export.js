@@ -328,7 +328,7 @@
      {
         const customerObject = dataCleaned.find('#dadosCorpoCF table:eq(1) tr:eq(0) td:contains("CNPJ/CPF")')
         const customer = getValue(customerObject.text()) || ''
-        const matches = /^\s*CNPF\/CPF\s+.+\:\s+(\d+)/g.exec(customer)
+        const matches = /^\s*CNPJ\/CPF\s+.+\:\s+(\d+)/g.exec(customer)
         if ( (matches) && (matches.length > 0) )
         {
           return {
@@ -406,6 +406,8 @@
         })
         await sleep(450)
 
+        $('#message').text('Extraindo dados')
+
         const dataCleaned = $('<div></div>');
         const dataSource  = $('.CupomFiscal').children().clone().not('#dadosRodapeCF').appendTo(dataCleaned)
         dataCleaned.find('*').removeAttr('style').removeAttr('class').removeAttr('align')
@@ -429,8 +431,20 @@
             source : [ '\\', JSON.stringify(dataCleaned.html()).slice(0,-1), '\\"'].join('')
         }
 
+        if (!data.customer) {
+            $('#message').text('Dados do consumidor não foram extraídos')
+            await sleep(400)
+        }
+        if (!data.totals) {
+            $('#message').text('Dados de totalização não extraídos')
+            await sleep(400)
+        }
+
+        $('#message').text('Enviando dados')
+
         const request  = fetch($('#service-endpoint').val(), {
             method : 'POST',
+            mode   : 'cors',
             body   : JSON.stringify(data)
         })
         const response = await request
