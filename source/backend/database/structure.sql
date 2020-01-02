@@ -24,6 +24,21 @@ CREATE TABLE `input` (
   PRIMARY KEY (`input_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+/*Table structure for table `stores` */
+
+DROP TABLE IF EXISTS `stores`;
+
+CREATE TABLE `stores` (
+  `store_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `address` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `cnpj` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `ie` varchar(15) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `im` varchar(15) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`store_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
