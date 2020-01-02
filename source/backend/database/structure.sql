@@ -19,8 +19,8 @@ DROP TABLE IF EXISTS `input`;
 CREATE TABLE `input` (
   `input_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `content` mediumblob,
-  `processed` tinyint(1) DEFAULT '0' COMMENT 'will signal if the registration has already been processed',
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `processed` timestamp NULL DEFAULT NULL COMMENT 'will signal if the registration has already been processed',
+  `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`input_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
