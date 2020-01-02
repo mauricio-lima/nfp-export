@@ -17,6 +17,45 @@
    }
 
 
+  function getPendingProcessingEntries()
+  {
+    header('Content-type: application/json');
+    
+    $sql = 'SELECT input_id, timestamp FROM input order by timestamp';
+    try 
+    {
+      $database = GetDatabaseConnection();
+      $statment = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+      $statment->execute();
+      
+      $result = [];
+      while ($row = $statment->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)) 
+      {
+        array_push($result, array( 'id' => intval($row['input_id']), 'datetime' => $row['timestamp']));
+      }
+      
+      print(json_encode($result, JSON_PRETTY_PRINT));   
+    }
+    catch (PDOException $e) 
+    {
+      print(json_encode(array(
+                               'code'        =>  103,
+                               'message'     => 'Database exception',
+                               'description' =>  $e->getMessage()        
+                             )));         
+    }
+    catch (Exception $e)
+    {
+      print('Generic exception');
+    }
+    finally
+    {
+      $statment = null;
+      print(PHP_EOL);
+    }
+  }
+  
+  
   function listCoupons()
   {
     header('Content-type: text/plain');
@@ -28,7 +67,8 @@
       $statment = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
       $statment->execute();
       
-      while ($row = $statment->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)) {
+      while ($row = $statment->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)) 
+      {
         $data = json_decode($row['content'], false);
         if (json_last_error() != JSON_ERROR_NONE)
         {
@@ -65,30 +105,8 @@
     }
   }
 
- 
-  function get($uri)
-  {
-     switch ($uri)
-     {
-       case '/nfp/list':
-         listCoupons();
-         break;
-         
-       default:
-         header('Access-Control-Allow-Origin: *');     
-         header('Content-type: application/json');
-         $result = array(
-                          'error'   => 'Unmapped URI',
-                          'referer' =>  $_SERVER['HTTP_REFERER'],
-                          'uri'     =>  $_SERVER['REQUEST_URI' ]
-                        );
-         print(json_encode($result, JSON_PRETTY_PRINT));
-         
-     }
-  }
 
-  
-  function post()
+  function postEntry()
   {
     global $logger;
     
@@ -123,8 +141,113 @@
     header('Content-type: application/json');
     print(json_encode($result, JSON_PRETTY_PRINT));
   }
+  
+  
+  function postProcessEntries()
+  {
+    header('Content-type: application/json');
+ 
+    try
+    {
+      $body = file_get_contents('php://input');
+      $list = json_decode($body, false);
+      if (json_last_error() != JSON_ERROR_NONE)
+      {
+        print('JSON Decode Error : ' . json_last_error());   
+        throw new Exception('JSON Decode Error : ' . json_last_error());
+      }
+      
+      if (!is_array($list)) 
+      {
+         throw new Exception('Invalid array supplied');
+      }
+      
+      $result = [];
+      foreach($list as $id)
+      {
+        array_push($result, array( 'id' => $id, 'store_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ) ) ); 
+      }
+      print(json_encode($result, JSON_PRETTY_PRINT));
+    }
+    catch (Exception $e)
+    {
+      print(json_encode(array(
+                               'code'        =>  102,
+                               'message'     => 'General exception',
+                               'description' =>  $e->getMessage()        
+                             )));
+    }
+  }
+ 
+ 
+  function get()
+  {
+     $uri = $_GET['route'];
+     $uri = (substr($uri,-1) == '/') ? substr($uri, 0, strlen($uri)-1) : $uri;
+     
+     switch ($uri)
+     {
+       case 'pending':
+         getPendingProcessingEntries();
+         break;
+       
+       case '/nfp/list':
+         listCoupons();
+         break;
+         
+       default:
+         header('Content-type: text/plain');
+         var_dump($_GET);
+         print(PHP_EOL);
+         print($_SERVER['QUERY_STRING']. PHP_EOL);
+         $start = strpos($_SERVER['QUERY_STRING'], '&');
+         var_dump($start);
+         var_dump(strpos($_SERVER['QUERY_STRING'], 'route',$start));
+         break;
+         //header('Access-Control-Allow-Origin: *');     
+         //header('Content-type: application/json');
+         $result = array(
+                          'error'   => 'Unmapped URI',
+                          'referer' =>  $_SERVER['HTTP_REFERER'],
+                          'uri'     =>  $_SERVER['REQUEST_URI' ]          
+                        );
+         print(json_encode($result, JSON_PRETTY_PRINT));
+         
+     }
+  }
 
+  
+  function post()
+  {
+     $uri = $_GET['route'];
+     $uri = (substr($uri,-1) == '/') ? substr($uri, 0, strlen($uri)-1) : $uri;
+     
+     switch ($uri)
+     {
+       case 'entry'  :
+         postEntry();
+         break;
+         
+       case 'process':
+         postProcessEntries();
+         break;
+     }  
+  }
 
+  $start = strpos($_SERVER['QUERY_STRING'], '&'); 
+  if ( ($start > 0) && (strpos($_SERVER['QUERY_STRING'], 'route', $start) !== false) )
+  {
+    header('Content-type: application/json');
+    http_response_code(406);
+    $result = array(
+                    'code'    =>  101,
+                    'message' => 'The parameter \'route\' could not be present in query string',
+                    'query'   =>  $_SERVER['QUERY_STRING']        
+                   );
+    print(json_encode($result, JSON_PRETTY_PRINT));
+    die();
+  }
+  
   switch ($_SERVER['REQUEST_METHOD'])
   {
     case 'OPTIONS':
