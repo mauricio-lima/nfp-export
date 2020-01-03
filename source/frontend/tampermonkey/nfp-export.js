@@ -116,14 +116,6 @@
      })
   }
 
-  window.nfpLibrary = {
-
-      //setup : () => {
-                 //installBootstrap()
-      //        },
-
-
-  }
 
   async function installBootstrap()
   {
@@ -149,7 +141,7 @@
                         '#dadosDoUsuario div',
                         'table.CFTamanhoFixo tbody',
                         'table.CFTamanhoFixo tbody tr td.alinharCentro p',
-                        '#ConteudoPrincipal div input'
+                        '#ConteudoPrincipal div input',
                        ]
 
      //await sleep(35000)
@@ -163,7 +155,10 @@
          selector = {...selector, changed : {}}
          const cssAfter = getCSS($(selector.selector)[0])
          for(let name in selector.cssBefore) {
-            if (selector.cssBefore[name] != cssAfter[name]) selector.changed[name] = selector.cssBefore[name]
+            if (selector.cssBefore[name] == cssAfter[name]) continue
+            if (name.substring(0,7) == '-webkit') continue
+
+            selector.changed[name] = selector.cssBefore[name]
          }
          return selector
      })
@@ -206,7 +201,7 @@
 
   async function setupViewToggler()
   {
-     const menu = $('#menuSuperior\\:submenu\\:24')
+     const menu = $('#menuSuperior\\:submenu\\:25')
      if (menu.length != 1) return
 
      const lastCommand = menu.children().last()
@@ -219,7 +214,8 @@
          .click( () => {
              const customView = localStorage.getItem('custom-view')
              localStorage.setItem('custom-view', customView == 'customized' ? 'standard' : 'customized')
-             setupView()
+             if (NFPCoupomView())
+               setupView()
          })
   }
 
@@ -296,6 +292,12 @@
          //load : () => nfpLibrary.setup(),
          //script : '$( document ).ready(function() { alert( "ready!" ) })'
      })
+  }
+
+
+  function NFPCoupomView()
+  {
+    return $('.CupomFiscal').length != 0
   }
 
 
@@ -491,9 +493,12 @@
     try
     {
       await installJQuery()
+      await setupViewToggler()
+      if (!NFPCoupomView())
+          return
+
       await installBootstrap()
       await setupButton()
-      await setupViewToggler()
       await setupView()
       await setupServiceDialog()
     }
