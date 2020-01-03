@@ -17,6 +17,30 @@
    }
 
 
+  function getStoreId($database, $store, &$is_new)
+  {
+    $sql = 'SELECT store_id, name, address, cnpj, ie, im FROM stores where name = ? AND address = ? AND cnpj = ? AND ie = ? AND im = ?';
+    $storesQuery = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+    $storesQuery->execute([$store->name, $store->address, $store->documents->cnpj, $store->documents->ie, $store->documents->im]);
+    if ($storesQuery->rowCount() == 0)
+    {
+       $sql = 'INSERT INTO stores (name, address, cnpj, ie, im) VALUES (?,?,?,?,?)';
+       $storesInsert = $database->prepare($sql);
+       $storesInsert->execute([$store->name, $store->address, $store->documents->cnpj, $store->documents->ie, $store->documents->im]);
+       $storeId = $database->lastInsertId();
+       $is_new = true;
+    }
+    else
+    {
+       $storeId = $storesQuery->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)['store_id'];
+       $is_new = false;
+    }
+    $storesQuery = null;
+    
+    return $storeId;
+  }
+  
+  
   function getPendingProcessingEntries()
   {
     header('Content-type: application/json');
@@ -178,7 +202,17 @@
           continue;
         }
         
+        $data = json_decode($row['content'], false);
+        if (json_last_error() != JSON_ERROR_NONE)
+        {
+          print('JSON Decode Error : ' . json_last_error());   
+          throw new Exception('JSON Decode Error');
+        }
+        
         $item = array_merge($item,  array('store_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ), 'start' => 0, 'interval' => 0));
+        
+        $storeId = getStoreId($database, $data->store, $item['store_is_new']);
+        
         array_push($result, $item);
       }
       
