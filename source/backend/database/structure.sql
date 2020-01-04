@@ -26,6 +26,32 @@ CREATE TABLE `customers` (
   PRIMARY KEY (`customer_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+/*Table structure for table `descriptions` */
+
+DROP TABLE IF EXISTS `descriptions`;
+
+CREATE TABLE `descriptions` (
+  `description_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `key` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `description` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`description_id`),
+  UNIQUE KEY `UNIQUE_KEY` (`key`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+/*Table structure for table `exceptions` */
+
+DROP TABLE IF EXISTS `exceptions`;
+
+CREATE TABLE `exceptions` (
+  `exception_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `description_id` bigint(20) DEFAULT NULL,
+  `detail` varchar(250) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`exception_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 /*Table structure for table `input` */
 
 DROP TABLE IF EXISTS `input`;
