@@ -28,6 +28,7 @@
     $statement = $database->prepare('INSERT INTO `exceptions` (`description`) values (?)');
     foreach($exceptions as $exception)
     {
+    var_dump($exception['data']);
         if (!isset($exception['key'])) continue;
         $description = array_filter($descriptions, function($description) use ($exception) { return $description['key'] == $exception['key']; });
         $description = array_shift($description);
@@ -93,6 +94,56 @@
     {
        $storeId = intval($storesQuery->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)['store_id']);
        $item['store_is_new'] = false;
+    }
+    $storesQuery = null;
+    
+    //$exceptions = array_map(function($exception) { $data = array_merge($exception['data'], [$item('id'), $storeId]); return array('key'=> $exception['key'], 'data' => data); }, $exceptions);
+    storeExceptions($database, $exceptions);
+    
+    return $storeId;
+  }
+
+
+  function getCustomerId($database, $data, &$item)
+  {
+    $exceptions = [];
+  
+    if ( !property_exists($data, 'customer') )
+      return null;
+
+    $name    = (property_exists($data->customer, 'name'   ) && !empty($data->customer->name   )) ? $data->customer->name    : null;
+    $address = (property_exists($data->customer, 'address') && !empty($data->customer->address)) ? $data->customer->address : null;
+    if (property_exists($data->customer, 'documents'))
+    {
+      $cpf_cnpj = (property_exists($data->customer->documents, 'cpf_cnpj') && !empty($data->customer->documents->cpf_cnpj)) ? $data->customer->documents->cpf_cnpj : null;
+    }
+    else
+    {
+      $cpf_cnpj = null;
+    }      
+      
+    $parameters = array( 'name' => $name, 'address' => $address, 'cpf_cnpj' => $cpf_cnpj );
+    $parameters = array_map('mapValues', array_keys($parameters), $parameters);
+    $sql = 'SELECT customer_id, name, address, cpf_cnpj FROM customers where ' . join(' AND ', $parameters);
+
+    $customersQuery = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+    $customersQuery->execute();
+    if ($customersQuery->rowCount() == 0)
+    {
+       $sql = 'INSERT INTO customers (name, address, cpf_cnpj) VALUES (?,?,?)';
+       $customersInsert = $database->prepare($sql);
+       $customersInsert->execute([$name, $address, $cpf_cnpj]);
+       $customerId = $database->lastInsertId();
+       $item['customer_is_new'] = true;
+       
+       if (!$name)     array_push($exceptions, array( 'key' => 'customer_name_not_defined',     'data' => [$customerId, $item['id']] ));
+       if (!$address)  array_push($exceptions, array( 'key' => 'customer_address_not_defined',  'data' => [$customerId, $item['id']] ));
+       if (!$cpf_cnpj) array_push($exceptions, array( 'key' => 'customer_document_not_defined', 'data' => [$customerId, $item['id']] ));
+    }
+    else
+    {
+       $customerId = intval($storesQuery->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)['customer_id']);
+       $item['customer_is_new'] = false;
     }
     $storesQuery = null;
     
@@ -272,11 +323,10 @@
           throw new Exception('JSON Decode Error');
         }
         
-        $item = array_merge($item,  array('store_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ), 'start' => 0, 'interval' => 0));
+        $item = array_merge($item,  array('store_is_new' => false, 'customer_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ), 'start' => 0, 'interval' => 0));
         
-        $storeId = getStoreId($database, $data, $item);
-        
-        
+        $storeId    = getStoreId   ($database, $data, $item);
+        $customerId = getCustomerId($database, $data, $item);
         
         array_push($result, $item);
       }
