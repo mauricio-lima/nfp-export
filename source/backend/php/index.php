@@ -17,16 +17,34 @@
    }
 
 
-  function getStoreId($database, $store, &$is_new)
+  function getStoreId($database, $data, &$is_new, &$exceptions)
   {
+    if ( !property_exists($data, 'store') )
+      return null;
+
+    $name    = (!property_exists($data->store, 'name'   ) || empty($data->store->name   )) ? $data->store->name    : null;
+    $address = (!property_exists($data->store, 'address') || empty($data->store->address)) ? $data->store->address : null;
+    if (property_exists($data->store, 'document'))
+    {
+      $cnpj = (!property_exists($data->store->document, 'cnpj') || empty($data->store->document->cnpj)) ? $data->store->document->cnpj : null;
+      $ie   = (!property_exists($data->store->document, 'ie'  ) || empty($data->store->document->ie  )) ? $data->store->document->ie   : null;
+      $im   = (!property_exists($data->store->document, 'im'  ) || empty($data->store->document->im  )) ? $data->store->document->im   : null;
+    }
+    else
+    {
+      $cnpj = null;
+      $ie   = null;
+      $im   = null;
+    }      
+      
     $sql = 'SELECT store_id, name, address, cnpj, ie, im FROM stores where name = ? AND address = ? AND cnpj = ? AND ie = ? AND im = ?';
     $storesQuery = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
-    $storesQuery->execute([$store->name, $store->address, $store->documents->cnpj, $store->documents->ie, $store->documents->im]);
+    $storesQuery->execute([$name, $address, $cnpj, $ie, $im]);
     if ($storesQuery->rowCount() == 0)
     {
        $sql = 'INSERT INTO stores (name, address, cnpj, ie, im) VALUES (?,?,?,?,?)';
        $storesInsert = $database->prepare($sql);
-       $storesInsert->execute([$store->name, $store->address, $store->documents->cnpj, $store->documents->ie, $store->documents->im]);
+       $storesInsert->execute([$name, $address, $cnpj, $ie, $im]);
        $storeId = $database->lastInsertId();
        $is_new = true;
     }
@@ -36,6 +54,12 @@
        $is_new = false;
     }
     $storesQuery = null;
+    
+    if (!$name)    array_push($exceptions, array( 'key' => 'store_name_not_defined',    'data' => [$storeId] ));
+    if (!$address) array_push($exceptions, array( 'key' => 'store_address_not_defined', 'data' => [$storeId] ));
+    if (!$cnpj)    array_push($exceptions, array( 'key' => 'store_cnpj_not_defined',    'data' => [$storeId] ));
+    if (!$ie)      array_push($exceptions, array( 'key' => 'store_ie_not_defined',      'data' => [$storeId] ));
+    if (!$im)      array_push($exceptions, array( 'key' => 'store_im_not_defined',      'data' => [$storeId] ));
     
     return $storeId;
   }
@@ -191,7 +215,8 @@
       $statment = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
       $statment->execute($list);
       
-      $result = [];
+      $result     = [];
+      $exceptions = [];
       while ($row = $statment->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)) 
       {
         $item = array( 'id' => intval($row['input_id']));
@@ -211,7 +236,7 @@
         
         $item = array_merge($item,  array('store_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ), 'start' => 0, 'interval' => 0));
         
-        $storeId = getStoreId($database, $data->store, $item['store_is_new']);
+        $storeId = getStoreId($database, $data, $item['store_is_new'], $exceptions);
         
         array_push($result, $item);
       }
