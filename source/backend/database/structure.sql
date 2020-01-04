@@ -18,11 +18,12 @@ DROP TABLE IF EXISTS `customers`;
 
 CREATE TABLE `customers` (
   `customer_id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `cpf_cnpj` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `cpf_cnpj` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
   `name` varchar(70) COLLATE utf8_unicode_ci DEFAULT NULL,
   `address` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `approved` tinyint(1) DEFAULT '0',
-  `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `approved` timestamp NULL DEFAULT NULL,
+  `updated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`customer_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -46,11 +47,11 @@ DROP TABLE IF EXISTS `exceptions`;
 
 CREATE TABLE `exceptions` (
   `exception_id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `description_id` bigint(20) DEFAULT NULL,
-  `detail` varchar(250) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `description` varchar(450) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `processed` timestamp NULL DEFAULT NULL,
+  `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`exception_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Table structure for table `input` */
 
@@ -78,7 +79,7 @@ CREATE TABLE `stores` (
   `updated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `inserted` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`store_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
