@@ -12,11 +12,11 @@ MySQL - 5.6.41-84.1 : Database - mauri879_financial_nfp
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-/*Table structure for table `customer` */
+/*Table structure for table `customers` */
 
-DROP TABLE IF EXISTS `customer`;
+DROP TABLE IF EXISTS `customers`;
 
-CREATE TABLE `customer` (
+CREATE TABLE `customers` (
   `customer_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `cpf_cnpj` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `name` varchar(70) COLLATE utf8_unicode_ci DEFAULT NULL,
