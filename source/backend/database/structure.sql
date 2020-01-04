@@ -25,7 +25,7 @@ CREATE TABLE `customers` (
   `updated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`customer_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Table structure for table `descriptions` */
 
@@ -39,7 +39,7 @@ CREATE TABLE `descriptions` (
   `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`description_id`),
   UNIQUE KEY `UNIQUE_KEY` (`key`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Table structure for table `exceptions` */
 
@@ -51,7 +51,7 @@ CREATE TABLE `exceptions` (
   `processed` timestamp NULL DEFAULT NULL,
   `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`exception_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Table structure for table `input` */
 
@@ -64,6 +64,51 @@ CREATE TABLE `input` (
   `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`input_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+/*Table structure for table `invoices` */
+
+DROP TABLE IF EXISTS `invoices`;
+
+CREATE TABLE `invoices` (
+  `invoice_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `coo` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `ccf` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `total` float DEFAULT NULL,
+  `addition` float DEFAULT NULL,
+  `discount` float DEFAULT NULL,
+  `store_id` bigint(20) DEFAULT NULL,
+  `customer_id` bigint(20) DEFAULT NULL,
+  `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`invoice_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+/*Table structure for table `items` */
+
+DROP TABLE IF EXISTS `items`;
+
+CREATE TABLE `items` (
+  `item_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `invoice_id` bigint(20) DEFAULT NULL,
+  `product_id` bigint(20) DEFAULT NULL,
+  `ordering` int(10) unsigned DEFAULT NULL,
+  `quantity` float DEFAULT NULL,
+  `unity_price` float DEFAULT NULL,
+  `discount` float DEFAULT NULL,
+  `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+/*Table structure for table `products` */
+
+DROP TABLE IF EXISTS `products`;
+
+CREATE TABLE `products` (
+  `product_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `description` varchar(80) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `inserted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Table structure for table `stores` */
 
