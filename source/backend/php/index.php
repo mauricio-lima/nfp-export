@@ -5,7 +5,7 @@
   
   
   function GetDatabaseConnection()
-   {
+  {
     $database = new PDO('mysql:host=localhost; dbname=mauri879_financial_nfp', 'mauri879_phpscpt', 'phpscpt');
     $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
@@ -14,21 +14,53 @@
     $database->query('SET character_set_results=utf8');
     
     return $database;
-   }
+  }
 
 
-  function getStoreId($database, $data, &$is_new, &$exceptions)
+  function storeExceptions($database, $exceptions)
   {
+    $sql = 'SELECT * FROM `descriptions`';
+    $statement = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+    $statement->execute();
+    $descriptions = $statement->fetchAll(PDO::FETCH_ASSOC);
+    $statement = null;
+        
+    $statement = $database->prepare('INSERT INTO `exceptions` (`description`) values (?)');
+    foreach($exceptions as $exception)
+    {
+        if (!isset($exception['key'])) continue;
+        $description = array_filter($descriptions, function($description) use ($exception) { return $description['key'] == $exception['key']; });
+        $description = array_shift($description);
+        $description = !$description ? '' : $description['description'];
+        foreach($exception['data'] as $key => $value)
+        {
+          $description = str_replace('{'. ($key + 1) .'}', $value, $description);
+        }
+        $statement->execute([$description]);
+    }
+  }
+  
+  
+  function mapValues($key,$value)
+  {
+    return is_null($value) ? 'ISNULL(' . $key . ')' : $key . ' = \'' . $value . '\'';
+  }
+  
+  
+  function getStoreId($database, $data, &$item)
+  {
+    $exceptions = [];
+  
     if ( !property_exists($data, 'store') )
       return null;
 
-    $name    = (!property_exists($data->store, 'name'   ) || empty($data->store->name   )) ? $data->store->name    : null;
-    $address = (!property_exists($data->store, 'address') || empty($data->store->address)) ? $data->store->address : null;
-    if (property_exists($data->store, 'document'))
+    $name    = (property_exists($data->store, 'name'   ) && !empty($data->store->name   )) ? $data->store->name    : null;
+    $address = (property_exists($data->store, 'address') && !empty($data->store->address)) ? $data->store->address : null;
+    if (property_exists($data->store, 'documents'))
     {
-      $cnpj = (!property_exists($data->store->document, 'cnpj') || empty($data->store->document->cnpj)) ? $data->store->document->cnpj : null;
-      $ie   = (!property_exists($data->store->document, 'ie'  ) || empty($data->store->document->ie  )) ? $data->store->document->ie   : null;
-      $im   = (!property_exists($data->store->document, 'im'  ) || empty($data->store->document->im  )) ? $data->store->document->im   : null;
+      $cnpj = (property_exists($data->store->documents, 'cnpj') && !empty($data->store->documents->cnpj)) ? $data->store->documents->cnpj : null;
+      $ie   = (property_exists($data->store->documents, 'ie'  ) && !empty($data->store->documents->ie  )) ? $data->store->documents->ie   : null;
+      $im   = (property_exists($data->store->documents, 'im'  ) && !empty($data->store->documents->im  )) ? $data->store->documents->im   : null;
     }
     else
     {
@@ -37,29 +69,35 @@
       $im   = null;
     }      
       
-    $sql = 'SELECT store_id, name, address, cnpj, ie, im FROM stores where name = ? AND address = ? AND cnpj = ? AND ie = ? AND im = ?';
+    $parameters = array( 'name' => $name, 'address' => $address, 'cnpj' => $cnpj, 'ie' => $ie, 'im' => $im );
+    $parameters = array_map('mapValues', array_keys($parameters), $parameters);
+    $sql = 'SELECT store_id, name, address, cnpj, ie, im FROM stores where ' . join(' AND ', $parameters);
+
     $storesQuery = $database->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
-    $storesQuery->execute([$name, $address, $cnpj, $ie, $im]);
+    $storesQuery->execute();
     if ($storesQuery->rowCount() == 0)
     {
        $sql = 'INSERT INTO stores (name, address, cnpj, ie, im) VALUES (?,?,?,?,?)';
        $storesInsert = $database->prepare($sql);
        $storesInsert->execute([$name, $address, $cnpj, $ie, $im]);
        $storeId = $database->lastInsertId();
-       $is_new = true;
+       $item['store_is_new'] = true;
+       
+       if (!$name)    array_push($exceptions, array( 'key' => 'store_name_not_defined',    'data' => [$storeId, $item['id']] ));
+       if (!$address) array_push($exceptions, array( 'key' => 'store_address_not_defined', 'data' => [$storeId, $item['id']] ));
+       if (!$cnpj)    array_push($exceptions, array( 'key' => 'store_cnpj_not_defined',    'data' => [$storeId, $item['id']] ));
+       if (!$ie)      array_push($exceptions, array( 'key' => 'store_ie_not_defined',      'data' => [$storeId, $item['id']] ));
+       if (!$im)      array_push($exceptions, array( 'key' => 'store_im_not_defined',      'data' => [$storeId, $item['id']] ));
     }
     else
     {
-       $storeId = $storesQuery->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)['store_id'];
-       $is_new = false;
+       $storeId = intval($storesQuery->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)['store_id']);
+       $item['store_is_new'] = false;
     }
     $storesQuery = null;
     
-    if (!$name)    array_push($exceptions, array( 'key' => 'store_name_not_defined',    'data' => [$storeId] ));
-    if (!$address) array_push($exceptions, array( 'key' => 'store_address_not_defined', 'data' => [$storeId] ));
-    if (!$cnpj)    array_push($exceptions, array( 'key' => 'store_cnpj_not_defined',    'data' => [$storeId] ));
-    if (!$ie)      array_push($exceptions, array( 'key' => 'store_ie_not_defined',      'data' => [$storeId] ));
-    if (!$im)      array_push($exceptions, array( 'key' => 'store_im_not_defined',      'data' => [$storeId] ));
+    //$exceptions = array_map(function($exception) { $data = array_merge($exception['data'], [$item('id'), $storeId]); return array('key'=> $exception['key'], 'data' => data); }, $exceptions);
+    storeExceptions($database, $exceptions);
     
     return $storeId;
   }
@@ -236,11 +274,15 @@
         
         $item = array_merge($item,  array('store_is_new' => false, 'items' => array( 'count' => 0, 'new' => 0 ), 'start' => 0, 'interval' => 0));
         
-        $storeId = getStoreId($database, $data, $item['store_is_new'], $exceptions);
+        $storeId = getStoreId($database, $data, $item);
+        
+        
         
         array_push($result, $item);
       }
       
+ 
+            
       print(json_encode($result, JSON_PRETTY_PRINT));
     }
     catch (Exception $e)
