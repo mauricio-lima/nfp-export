@@ -400,43 +400,57 @@
      }  
   }
 
-  $start = strpos($_SERVER['QUERY_STRING'], '&'); 
-  if ( ($start > 0) && (strpos($_SERVER['QUERY_STRING'], 'route', $start) !== false) )
+
+  try
+  {
+    $start = strpos($_SERVER['QUERY_STRING'], '&'); 
+    if ( ($start > 0) && (strpos($_SERVER['QUERY_STRING'], 'route', $start) !== false) )
+    {
+      header('Content-type: application/json');
+      http_response_code(406);
+      $result = array(
+                      'code'    =>  101,
+                      'message' => 'The parameter \'route\' could not be present in query string',
+                      'query'   =>  $_SERVER['QUERY_STRING']        
+                     );
+      print(json_encode($result, JSON_PRETTY_PRINT));
+      die();
+    }
+    
+    switch ($_SERVER['REQUEST_METHOD'])
+    {
+      case 'OPTIONS':
+          header('Access-Control-Allow-Origin: *');
+          header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+          header('Access-Control-Allow-Headers: Content-Type');	
+          $logger->put('OPTIONS');
+          die();
+
+      case 'POST':
+          header('Access-Control-Allow-Origin:  *');
+          post();
+          break;
+
+      case 'GET':
+          get($_SERVER['REQUEST_URI' ]);
+          die();
+
+      default:
+          print($_SERVER['REQUEST_METHOD'] . ' : Method not processed');
+          $logger->put($_SERVER['REQUEST_METHOD'] . PHP_EOL . 'Method not processed' );
+          die();
+
+    }
+  }
+  catch (Exception $exception)
   {
     header('Content-type: application/json');
-    http_response_code(406);
-    $result = array(
-                    'code'    =>  101,
-                    'message' => 'The parameter \'route\' could not be present in query string',
-                    'query'   =>  $_SERVER['QUERY_STRING']        
-                   );
-    print(json_encode($result, JSON_PRETTY_PRINT));
-    die();
+    print(json_encode(array(
+      'code'        =>  102,
+      'message'     => 'General exception',
+      'description' =>  $e->getMessage()        
+    )));
   }
-  
-  switch ($_SERVER['REQUEST_METHOD'])
-  {
-    case 'OPTIONS':
-        header('Access-Control-Allow-Origin: *');
-  	header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-  	header('Access-Control-Allow-Headers: Content-Type');	
-  	$logger->put('OPTIONS');
-  	die();
-  	
-    case 'POST':
-       header('Access-Control-Allow-Origin:  *');
-       post();
-       break;
-       
-    case 'GET':
-       get($_SERVER['REQUEST_URI' ]);
-       die();
-       
-    default:
-       print($_SERVER['REQUEST_METHOD'] . ' : Method not processed');
-       $logger->put($_SERVER['REQUEST_METHOD'] . PHP_EOL . 'Method not processed' );
-       die();
-       
-  }
+
 
 ?>
