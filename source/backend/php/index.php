@@ -3,10 +3,49 @@
 
   $logger = new Logger('log.txt');
   
+  $error_string = [];
   
+  function load_translations()
+  {
+    global $error_string;
+
+    $translations = parse_ini_file('translations.ini', true);
+    $error_string = $translations['pt-br'];
+  }
+
+
+  function error_message($key)
+  {
+    global $error_string;
+
+    if (!isset($error_string[$key]))
+      return $key;
+
+    return $error_string[$key];
+  }
+
+
   function GetDatabaseConnection()
   {
-    $database = new PDO('mysql:host=localhost; dbname=mauri879_financial_nfp', 'mauri879_phpscpt', 'phpscpt');
+    $configuration = parse_ini_file('configuration.ini', true);
+
+    if (!isset($configuration['database']['host']))
+      throw new Exception(error_message('missing.host.database.configuration'));
+
+    if (!isset($configuration['database']['name']))
+    {
+      $message = error_message('missing.name.database.configuration');
+      throw new Exception(error_message('missing.name.database.configuration'));
+    }
+      
+
+    if (!isset($configuration['database']['user']))
+      throw new Exception(error_message('missing.user.database.configuration'));
+
+    if (!isset($configuration['database']['password'])) 
+      throw new Exception(error_message('missing.password.database.configuration'));
+
+    $database = new PDO('mysql:host=' . $configuration['database']['host'] . '; dbname='  . $configuration['database']['name'], $configuration['database']['user'], $configuration['database']['password']);
     $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     $database->query('SET character_set_connection=utf8');
@@ -181,9 +220,9 @@
                                'description' =>  $e->getMessage()        
                              )));         
     }
-    catch (Exception $e)
+    catch (Exception $exception)
     {
-      print('Generic exception');
+      throw $exception;
     }
     finally
     {
@@ -416,7 +455,9 @@
       print(json_encode($result, JSON_PRETTY_PRINT));
       die();
     }
-    
+
+    load_translations();
+
     switch ($_SERVER['REQUEST_METHOD'])
     {
       case 'OPTIONS':
@@ -448,9 +489,8 @@
     print(json_encode(array(
       'code'        =>  102,
       'message'     => 'General exception',
-      'description' =>  $e->getMessage()        
+      'description' =>  $exception->getMessage()        
     )));
   }
-
 
 ?>
