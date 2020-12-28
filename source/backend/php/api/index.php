@@ -442,6 +442,7 @@
 
   try
   {
+    throw new ErrorException("teste");
     $start = strpos($_SERVER['QUERY_STRING'], '&'); 
     if ( ($start > 0) && (strpos($_SERVER['QUERY_STRING'], 'route', $start) !== false) )
     {

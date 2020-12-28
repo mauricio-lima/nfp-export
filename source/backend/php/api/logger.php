@@ -20,7 +20,7 @@ class Logger
     
     public function getPrefix($filler = false) 
     {
-    	if (strlen($format == '') == 0)
+    	if (strlen($this->format == '') == 0)
     	   return '';
     	   
         $prefix = date($this->format). ' >> ';
