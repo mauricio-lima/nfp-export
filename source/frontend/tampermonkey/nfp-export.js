@@ -177,97 +177,6 @@
      })
   }
 
-  async function setupButton() {
-     const backButton = $('[name="ctl00$ConteudoPagina$btnVoltar"]')
-     if (backButton.length != 1) return
-     backButton
-         .clone()
-         .val('Enviar')
-         .attr('type', 'button')
-         .attr('id',   'btnEnviar')
-         .insertBefore(backButton)
-         .click( async () => {
-            $('#NFPExportModal').modal({
-                  show : true
-            })
-         })
-
-      $('#ConteudoPrincipal div:has(input + input)')
-          .insertBefore('#ConteudoPrincipal div.CupomFiscal')
-          .css({ 'margin-top' : '20px', 'margin-bottom' : '15px' })
-
-      $('#ConteudoPrincipal div.CupomFiscal')
-          .css({ 'margin-bottom' : '130px' })
-  }
-
-
-  async function setupViewToggler()
-  {
-     const menu = $('#menuSuperior\\:submenu\\:25')
-     if (menu.length != 1) return
-
-     const lastCommand = menu.children().last()
-     lastCommand
-         .clone()
-         .insertAfter(lastCommand)
-         .children('a')
-         .text('Alternar visualização')
-         .attr('href', '#')
-         .click( () => {
-             const customView = localStorage.getItem('custom-view')
-             localStorage.setItem('custom-view', customView == 'customized' ? 'standard' : 'customized')
-             if (NFPCoupomView())
-               setupView()
-         })
-  }
-
-
-  async function setupView()
-  {
-    function setupCustomizedView()
-    {
-        const coupon = $('div.CupomFiscal')
-        coupon
-          .attr('style','font-size:13px; width:430px; padding:15px;')
-          .css ({ 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)', 'margin-left' : 'auto', 'margin-right': 'auto' })
-
-        $('#ConteudoPrincipal div:has(input + input)')
-          .children()
-          .addClass   ('btn btn-sm btn-info')
-          .removeClass('button')
-          .css        ({ 'font-size' : '1rem', 'margin' : '4px', 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)' })
-          .width      (74)
-    }
-
-    function setupStandardView()
-    {
-        const coupon = $('div.CupomFiscal')
-        coupon
-          .removeAttr('style')
-          .css ({ 'box-shadow' : '', 'margin-left' : '', 'margin-right' : '' })
-          //coupon.removeClass('alinharCentro')
-        $('#ConteudoPrincipal div:has(input + input)')
-          .children()
-          .removeClass('btn btn-sm btn-info')
-          .addClass   ('button')
-          .css        ({ 'font-size' : '', 'margin' : '', 'box-shadow' : '' })
-          .width      (38)
-    }
-
-    const view = ($('div.CupomFiscal').length > 0) ? localStorage.getItem('custom-view') : 'standard'
-    switch (view)
-    {
-        case 'customized':
-            setupCustomizedView()
-            break;
-
-        default:
-            setupStandardView()
-            break;
-
-    }
-  }
-
 
   async function setupServiceDialog(processor)
   {
@@ -611,8 +520,6 @@
 
      try
      {
-        //const request  = fetch('https://reqres.in/api/users?delay=3', { method: 'GET' , mode: 'cors' })
-
         $('#loadMe').modal({
             backdrop : 'static',   // remove ability to close modal with click
             keyboard :  false,     // remove option to close with keyboard
@@ -684,9 +591,7 @@
     try
     {
       await installJQuery()
-      //await setupViewToggler()
 
-      debugger
       const processor = NFPCoupomView()
       if (!processor)
           return
@@ -694,8 +599,6 @@
       processor.setupView()
 
       await installBootstrap()
-      //await setupButton()
-      //await setupView()
       await setupServiceDialog(processor)
     }
     catch (e)
@@ -704,5 +607,4 @@
     }
   })()
 })()
-
 
