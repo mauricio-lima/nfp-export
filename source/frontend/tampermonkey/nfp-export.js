@@ -5,6 +5,7 @@
 // @description  try to take over the world!
 // @author       Mauricio Lima
 // @match        https://www.nfp.fazenda.sp.gov.br/ConsultaUsuario/ConsultaListaNF2.aspx
+// @match        https://satsp.fazenda.sp.gov.br/COMSAT/Public/ConsultaPublica/*
 // @grant        none
 // ==/UserScript==
 
@@ -297,9 +298,153 @@
   }
 
 
+  function GetViewProcessor(processor)
+  {
+     switch (processor)
+     {
+         case 'v1':
+             return GetV1Processor();
+
+         case 'v2':
+             return GetV2Processor();
+
+         default:
+            return GetEmptyProcessor();
+
+     }
+  }
+
+
+  function GetV1Processor()
+  {
+      function setupCustomizedView()
+      {
+        const coupon = $('div.CupomFiscal')
+        coupon
+          .attr('style','font-size:13px; width:430px; padding:15px;')
+          .css ({ 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)', 'margin-left' : 'auto', 'margin-right': 'auto' })
+
+        $('#ConteudoPrincipal div:has(input + input)')
+          .children()
+          .addClass   ('btn btn-sm btn-info')
+          .removeClass('button')
+          .css        ({ 'font-size' : '1rem', 'margin' : '4px', 'box-shadow' : '10px 10px 18px 6px rgba(0,0,0,0.31)' })
+          .width      (74)
+      }
+
+      function setupStandardView()
+      {
+        const coupon = $('div.CupomFiscal')
+        coupon
+          .removeAttr('style')
+          .css ({ 'box-shadow' : '', 'margin-left' : '', 'margin-right' : '' })
+          //coupon.removeClass('alinharCentro')
+        $('#ConteudoPrincipal div:has(input + input)')
+          .children()
+          .removeClass('btn btn-sm btn-info')
+          .addClass   ('button')
+          .css        ({ 'font-size' : '', 'margin' : '', 'box-shadow' : '' })
+          .width      (38)
+      }
+
+      async function setupButton()
+      {
+        const backButton = $('[name="ctl00$ConteudoPagina$btnVoltar"]')
+        if (backButton.length != 1) return
+
+        backButton
+         .clone()
+         .val('Enviar')
+         .attr('type', 'button')
+         .attr('id',   'btnEnviar')
+         .insertBefore(backButton)
+         .click( async () => {
+            $('#NFPExportModal').modal({
+                  show : true
+            })
+         })
+
+         $('#ConteudoPrincipal div:has(input + input)')
+           .insertBefore('#ConteudoPrincipal div.CupomFiscal')
+           .css({ 'margin-top' : '20px', 'margin-bottom' : '15px' })
+
+         $('#ConteudoPrincipal div.CupomFiscal')
+           .css({ 'margin-bottom' : '130px' })
+      }
+
+      function setupView()
+      {
+         const view = ($('div.CupomFiscal').length > 0) ? localStorage.getItem('custom-view') : 'standard'
+         switch (view)
+         {
+                      case 'customized':
+                          setupCustomizedView()
+                          break;
+
+                      default:
+                          setupStandardView()
+                          break;
+
+         }
+         setupButton()
+      }
+
+      async function setupViewToggler()
+      {
+          const menu = $('#menuSuperior\\:submenu\\:24')
+          if (menu.length != 1) return
+
+          const lastCommand = menu.children().last()
+          lastCommand
+              .clone()
+              .insertAfter(lastCommand)
+              .children('a')
+              .text('Alternar visualização')
+              .attr('href', '#')
+              .click( () => {
+                  const customView = localStorage.getItem('custom-view')
+                  localStorage.setItem('custom-view', customView == 'customized' ? 'standard' : 'customized')
+                  setupView()
+              })
+      }
+
+      return {
+
+          setupView : async function () {
+              setupViewToggler()
+              setupView()
+          }
+
+      }
+  }
+
+
+  function GetV2Processor()
+  {
+      return {
+
+          setupView : () => {
+              alert('V2 processor')
+          }
+      }
+  }
+
+
+  function GetEmptyProcessor()
+  {
+
+  }
+
+
   function NFPCoupomView()
   {
-    return $('.CupomFiscal').length != 0
+    if ( $('.CupomFiscal').length != 0 )
+        return GetViewProcessor('v1')
+
+    if ( $('#conteudo_divMovimento').length != 0 )
+        return GetViewProcessor('v2')
+
+    return false
   }
 
 
@@ -495,13 +640,18 @@
     try
     {
       await installJQuery()
-      await setupViewToggler()
-      if (!NFPCoupomView())
+      //await setupViewToggler()
+
+      debugger
+      const processor = NFPCoupomView()
+      if (!processor)
           return
 
+      processor.setupView()
+
       await installBootstrap()
-      await setupButton()
-      await setupView()
+      //await setupButton()
+      //await setupView()
       await setupServiceDialog()
     }
     catch (e)
