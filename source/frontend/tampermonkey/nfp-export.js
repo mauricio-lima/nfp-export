@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Nota Fiscal Paulista Export
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0
 // @description  try to take over the world!
 // @author       Mauricio Lima
 // @match        https://www.nfp.fazenda.sp.gov.br/ConsultaUsuario/ConsultaListaNF2.aspx
 // @grant        none
 // ==/UserScript==
+
 
 (function() {
   'use strict';
@@ -24,7 +25,7 @@
                       <div class="col-12">
                         <div class="form-group">
                               <label>Endpoint</label>
-                              <input id="service-endpoint" type="text" class="form-control" value="https://mauriciolima.eti.br/nfp/" >
+                              <input id="service-endpoint" type="text" class="form-control" value="https://localhost/nfp/api/entry" >
                         </div>
                       </div>
                     </div>
@@ -262,6 +263,7 @@
         default:
             setupStandardView()
             break;
+
     }
   }
 
@@ -508,3 +510,5 @@
     }
   })()
 })()
+
+
