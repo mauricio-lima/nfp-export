@@ -269,7 +269,7 @@
   }
 
 
-  async function setupServiceDialog()
+  async function setupServiceDialog(processor)
   {
      $('body').append(NFPDialog)
 
@@ -284,7 +284,7 @@
 
      $('#NFPExportModal')
         .on('shown.bs.modal', (e) => { $('body').css("padding-right","0") })
-        .find('.modal-footer .btn-primary').click(NFPSendData)
+        .find('.modal-footer .btn-primary').click(processor.sendData)
   }
 
 
@@ -408,12 +408,19 @@
               })
       }
 
+      async function sendData()
+      {
+         NFPSendData()
+      }
+
       return {
 
           setupView : async function () {
               setupViewToggler()
               setupView()
-          }
+          },
+
+          sendData  : () => sendData()
 
       }
   }
@@ -421,11 +428,48 @@
 
   function GetV2Processor()
   {
+      async function setupButton()
+      {
+        const printButton = $('#conteudo_btnImprimir')
+        if (printButton.length != 1) return
+
+        printButton
+         .clone()
+         .val('Enviar')
+         .attr('type', 'button')
+         .attr('name', 'ctl00$conteudo$btnEnviar')
+         .attr('id',   'btnEnviar')
+         .insertBefore(printButton)
+         .click( async () => {
+            $('#NFPExportModal').modal({
+                  show : true
+            })
+         })
+         .parent()
+         .insertBefore('.BoxLineStyle')
+
+         $('#NFPExportModal')
+         //$('#ConteudoPrincipal div:has(input + input)')
+         //  .insertBefore('#ConteudoPrincipal div.CupomFiscal')
+      }
+
+      function setupView()
+      {
+         setupButton()
+      }
+
+      function sendData()
+      {
+         alert('Send Data')
+      }
+
       return {
 
           setupView : () => {
-              alert('V2 processor')
-          }
+              setupButton()
+          },
+
+          sendData  : () => sendData()
       }
   }
 
@@ -652,7 +696,7 @@
       await installBootstrap()
       //await setupButton()
       //await setupView()
-      await setupServiceDialog()
+      await setupServiceDialog(processor)
     }
     catch (e)
     {
