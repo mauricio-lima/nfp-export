@@ -11,3 +11,9 @@ https://stackoverflow.com/questions/14767530/php-using-pdo-with-in-clause-array
 PDO get the last ID inserted
 https://stackoverflow.com/questions/10680943/pdo-get-the-last-id-inserted
 
+
+Integrate Xdebug with the PHP interpreter﻿
+https://www.jetbrains.com/help/idea/configuring-xdebug.html
+
+
+-
