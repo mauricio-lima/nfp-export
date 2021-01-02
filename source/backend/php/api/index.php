@@ -181,15 +181,15 @@
     }
     else
     {
-       $customerId = intval($storesQuery->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)['customer_id']);
+       $customerId = intval($customersQuery->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)['customer_id']);
        $item['customer_is_new'] = false;
     }
-    $storesQuery = null;
+    $customersQuery = null;
     
     //$exceptions = array_map(function($exception) { $data = array_merge($exception['data'], [$item('id'), $storeId]); return array('key'=> $exception['key'], 'data' => data); }, $exceptions);
     storeExceptions($database, $exceptions);
     
-    return $storeId;
+    return $customerId;
   }
   
   
@@ -232,7 +232,7 @@
   }
   
   
-  function listCoupons()
+  function listCoupons($option = 2)
   {
     header('Content-type: text/plain');
   
@@ -252,16 +252,25 @@
           throw new Exception('JSON Decode Error');
         }
         
-        //print_r($data);
-        $display  = '';
-        $display .= ($data->customer->documents->cpf_cnpj != '') ? $data->customer->documents->cpf_cnpj : 'missing    ';
-        //$display .= $data->documents->cnpj_cpf;
-        $display .= '  ';
-        $display .= substr($data->datetime,0,10) . '     ';
-        $display .= substr('       ' . $data->totals->total, -8) . '    '; 
-        $display .= $data->store->name;
-        print($display . PHP_EOL);
-       
+        switch ($option)
+        {
+            case 1:
+                //print_r($data);
+                $display  = '';
+                $display .= ($data->customer->documents->cpf_cnpj != '') ? $data->customer->documents->cpf_cnpj : 'missing    ';
+                //$display .= $data->documents->cnpj_cpf;
+                $display .= '  ';
+                $display .= substr($data->datetime,0,10) . '     ';
+                $display .= substr('       ' . $data->totals->total, -8) . '    '; 
+                $display .= $data->store->name;
+                print($display . PHP_EOL);
+                break;
+
+            case 2:
+                print(json_encode($data, JSON_PRETTY_PRINT));
+                break;
+        }
+      
         //print($row['content']);
         //print($data['totals']['total'] . PHP_EOL);
       }
@@ -309,7 +318,7 @@
     catch(PDOException $err)
      {
       $dump .= $err->getMessage()     . PHP_EOL;
-      $dump .= $database->errorInfo() . PHP_EOL;
+      //$dump .= $database->errorInfo() . PHP_EOL;
       $logger->put($dump);   
       $result = array( 'message' => $err->getMessage());
      }
@@ -393,13 +402,17 @@
      switch ($uri)
      {
        case 'pending':
-         getPendingProcessingEntries();
-         break;
+          getPendingProcessingEntries();
+          break;
        
-       case '/nfp/list':
-         listCoupons();
-         break;
+       case 'api/list':
+          listCoupons(1);
+          break;
          
+       case 'api/list2':
+          listCoupons(2);
+          break;
+
        default:
          header('Content-type: text/plain');
          var_dump($_GET);
@@ -424,16 +437,17 @@
   
   function post()
   {
+    //throw new ErrorException("teste");
      $uri = $_GET['route'];
      $uri = (substr($uri,-1) == '/') ? substr($uri, 0, strlen($uri)-1) : $uri;
      
      switch ($uri)
      {
-       case 'entry'  :
+       case 'api/entry'  :
          postEntry();
          break;
          
-       case 'process':
+       case 'api/process':
          postProcessEntries();
          break;
      }  
@@ -442,7 +456,7 @@
 
   try
   {
-    throw new ErrorException("teste");
+    //throw new ErrorException("teste");
     $start = strpos($_SERVER['QUERY_STRING'], '&'); 
     if ( ($start > 0) && (strpos($_SERVER['QUERY_STRING'], 'route', $start) !== false) )
     {
