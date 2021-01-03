@@ -218,6 +218,9 @@
            case 'v2':
                return GetV2Processor();
   
+           case 'v2Detail':
+               return GetV2DetailProcessor()
+  
            default:
               return GetEmptyProcessor();
   
@@ -658,6 +661,24 @@
     }
   
   
+    function GetV2DetailProcessor()
+    {
+        function setupView()
+        {
+  
+          alert('Inside Details')
+          $('#conteudo_tabProdutoServico').trigger('click')
+        }
+  
+        return {
+  
+            setupView : () => setupView(),
+  
+            getData   : async () => await getData()
+        }
+    }
+  
+  
     function GetEmptyProcessor()
     {
        return {
@@ -673,6 +694,9 @@
   
       if ( $('#conteudo_divMovimento').length != 0 )
           return GetViewProcessor('v2')
+  
+      if ( $('form[action="DadosLotesEnviadosDadosCupom.aspx"]').length != 0 )
+          return GetViewProcessor('v2Detail')
   
       return false
     }
